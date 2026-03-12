@@ -1,78 +1,81 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <vector>
+#include <cmath>
 using namespace std;
 
-static const long long MOD = 1000000007LL;
+static vector<long> tree;
+static int MOD = 1000000007;
+long getMul(int s, int e);
+void changeVal(int index, long val);
+void setTree(int i);
 
-struct SegTree {
-    int n;
-    vector<long long> tree;
-
-    SegTree(int n) : n(n) {
-        tree.assign(4 * n + 5, 1LL);
-    }
-
-    long long mergeVal(long long a, long long b) {
-        return (a * b) % MOD;
-    }
-
-    void build(const vector<long long>& arr, int node, int l, int r) {
-        if (l == r) {
-            tree[node] = arr[l] % MOD;
-            return;
-        }
-        int mid = (l + r) / 2;
-        build(arr, node * 2, l, mid);
-        build(arr, node * 2 + 1, mid + 1, r);
-        tree[node] = mergeVal(tree[node * 2], tree[node * 2 + 1]);
-    }
-
-    void update(int node, int l, int r, int idx, long long val) {
-        if (idx < l || idx > r) return;
-        if (l == r) {
-            tree[node] = val % MOD;
-            return;
-        }
-        int mid = (l + r) / 2;
-        update(node * 2, l, mid, idx, val);
-        update(node * 2 + 1, mid + 1, r, idx, val);
-        tree[node] = mergeVal(tree[node * 2], tree[node * 2 + 1]);
-    }
-
-    long long query(int node, int l, int r, int ql, int qr) {
-        if (qr < l || r < ql) return 1LL;           // 곱의 항등원
-        if (ql <= l && r <= qr) return tree[node];
-        int mid = (l + r) / 2;
-        long long left = query(node * 2, l, mid, ql, qr);
-        long long right = query(node * 2 + 1, mid + 1, r, ql, qr);
-        return mergeVal(left, right);
-    }
-};
-
-int main() {
+int main(){
     ios::sync_with_stdio(false);
-    cin.tie(nullptr);
+    cin.tie(NULL);
+    cout.tie(NULL);
 
     int N, M, K;
     cin >> N >> M >> K;
+    int treeHeight = 0;
+    int Length = N;
 
-    vector<long long> arr(N + 1);
-    for (int i = 1; i <= N; i++) cin >> arr[i];
+    while(Length != 0){
+        Length /= 2;
+        treeHeight++;
+    }
+    int treeSize = int(pow(2, treeHeight + 1));
+    int leftNodeStartIndex = treeSize / 2 - 1;
+    tree.resize(treeSize);
+    fill(tree.begin(), tree.end(), 1);
 
-    SegTree st(N);
-    st.build(arr, 1, 1, N);
+    for(int i = leftNodeStartIndex + 1; i <= leftNodeStartIndex + N; i++){
+        cin >> tree[i];
+    }
+    setTree(treeSize - 1);
 
-    for (int i = 0; i < M + K; i++) {
-        int a;
-        long long b, c;
-        cin >> a >> b >> c;
-        if (a == 1) {
-            // b번째 값을 c로 변경
-            st.update(1, 1, N, (int)b, c);
-        } else if (a == 2) {
-            // [b, c] 구간 곱 출력
-            cout << st.query(1, 1, N, (int)b, (int)c) << "\n";
+    for(int i = 0; i < M + K; i++){
+        long a, s, e;
+        cin >> a >> s >> e;
+
+        if(a == 1){
+            changeVal(leftNodeStartIndex + s, e);
+        }else if(a == 2){
+            s += leftNodeStartIndex;
+            e += leftNodeStartIndex;
+            cout << getMul(s, e) << '\n';
         }
     }
+}
 
-    return 0;
+long getMul(int s, int e){
+    long partMul = 1;
+
+    while(s <= e){
+        if(s % 2 == 1){
+            partMul = partMul * tree[s] % MOD;
+            s++;
+        }
+        if(e % 2 == 0){
+            partMul = partMul * tree[e] % MOD;
+            e--;
+        }
+        s /= 2;
+        e /= 2;
+    }
+    return partMul;
+}
+
+void changeVal(int index, long val){
+    tree[index] = val;
+    while(index > 1){
+        index /= 2;
+        tree[index] = tree[index * 2] % MOD * tree[index * 2 + 1] % MOD;
+    }
+}
+
+void setTree(int i){
+    while(i != 1){
+        tree[i / 2] = tree[i / 2] * tree[i] % MOD;
+        i--;
+    }
 }
