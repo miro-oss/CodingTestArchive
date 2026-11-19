@@ -18,7 +18,7 @@ int main() {
 
     int m = INT_MIN;
 
-    for(int j = 0; j < 101; j++){
+    for(int j = 0; j < 301; j++){
         int sum = 0;
         for(int k = j - K; k <= j + K; k++){
             if(k >= 0 && k <= 100){
